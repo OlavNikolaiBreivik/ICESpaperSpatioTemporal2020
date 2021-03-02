@@ -2,7 +2,8 @@ library(spatioTemporalIndices)
 years = 1994:2019
 lengthGroups = seq(20,100,by = 5)
 conf = defConf(years = years, lengthGroups = lengthGroups)
-load("dataNorwegian.RData")
+dataDir <- system.file("extdata", package = "spatioTemporalIndices")
+load(paste0(dataDir,"/dataNorwegian.RData"))
 
 par = setPar(dat,conf)
 map = setMap(par,conf)
