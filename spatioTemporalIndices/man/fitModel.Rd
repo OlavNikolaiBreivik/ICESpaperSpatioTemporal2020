@@ -11,7 +11,8 @@ fitModel(
   map = NULL,
   doDetailedRep = 2,
   low = list(),
-  up = list()
+  up = list(),
+  doValidation = 0
 )
 }
 \arguments{

@@ -65,6 +65,9 @@ partable<-function(run, ...){
   rho_t_U =  2/(1 + exp(-2 * (pl$tan_rho_t+ 1.96*plSD$tan_rho_t))) - 1
   rho_t_L =  2/(1 + exp(-2 * (pl$tan_rho_t- 1.96*plSD$tan_rho_t))) - 1
 
+  rho_l[1:2] = rho_l[1:2]^(1/run$conf$reduceLength) #Accommodates for reduced length dimension
+  rho_l_U[1:2] = rho_l_U[1:2]^(1/run$conf$reduceLength)
+  rho_l_L[1:2] = rho_l_L[1:2]^(1/run$conf$reduceLength)
 
   sigma = exp(pl$log_sigma)
   sigmaU = exp(pl$log_sigma + 1.96*plSD$log_sigma)

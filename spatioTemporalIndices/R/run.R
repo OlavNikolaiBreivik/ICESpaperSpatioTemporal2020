@@ -11,7 +11,7 @@
 #' @return A fitted stim object
 #' @details
 #' @export
-fitModel<-function(data,par,conf,map = NULL, doDetailedRep = 2, low = list(),up = list()){
+fitModel<-function(data,par,conf,map = NULL, doDetailedRep = 2, low = list(),up = list(),doValidation = 0){
 
   tryCatch(
     {
@@ -39,6 +39,7 @@ fitModel<-function(data,par,conf,map = NULL, doDetailedRep = 2, low = list(),up 
   data$usePCpriors = conf$usePcPriors
   data$zeroInflated = conf$zeroInflated
   data$doDetailedRep = doDetailedRep
+  data$doValidation = doValidation
 
 
 
@@ -54,13 +55,18 @@ fitModel<-function(data,par,conf,map = NULL, doDetailedRep = 2, low = list(),up 
                 lower = lower, upper = upper)
 
 
-  if(doDetailedRep){
+  rep = list()
+  pl = list()
+  plSd = list()
+  if(doValidation==0){
     rep <- sdreport(obj)
-  }else{
-    rep <- sdreport(obj,ignore.parm.uncertainty  = TRUE)
+    pl = as.list(rep,"Est")
+    plSd = as.list(rep,"Std")
   }
 
-  toReturn = list(obj = obj,opt = opt,rep = rep,conf = conf,data = data,map = map,par = par)
+
+
+  toReturn = list(obj = obj,opt = opt,rep = rep,conf = conf,data = data,map = map,par = par,pl = pl, plSd = plSd)
   class(toReturn) = "stim"
 
   return(toReturn)
@@ -176,12 +182,12 @@ jit<-function(run,njit,ncores = 1,sd = 0.2){
 #' @param fold Vector of data indices to remove when fitting stim
 #' @details
 #' @export
-runwithout = function(data,par,conf,map,fold){
+runwithout = function(data,par,conf,map,fold,doDetailedRep = 0,doValidation =  1){
   predMatrix = data$fishObsMatrix*0
   predMatrix[fold,] = 1
 
   data$predMatrix = predMatrix
-  run = fitModel(data = data,par = par,conf = conf,map=map)
+  run = fitModel(data = data,par = par,conf = conf,map=map,doDetailedRep = doDetailedRep,doValidation =  doValidation)
   return(run)
 }
 

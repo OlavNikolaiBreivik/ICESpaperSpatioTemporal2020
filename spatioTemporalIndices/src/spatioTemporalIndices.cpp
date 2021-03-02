@@ -52,6 +52,8 @@ Type objective_function<Type>::operator() ()
   DATA_INTEGER(nBasisSunAlt);
   DATA_INTEGER(obsModel);
   DATA_INTEGER(doDetailedRep);
+  DATA_INTEGER(doValidation);
+
 
   DATA_VECTOR(obsVector);//Observations in a vector. TODO: remove the observation matrix.
   DATA_IVECTOR(idxStart);//Index helper when refering to the observation vector
@@ -209,6 +211,8 @@ Type objective_function<Type>::operator() ()
   vector<Type> depthEffect1=X_depth*parDepth1;
   vector<Type> depthEffect2=X_depth*parDepth2;
 
+  vector<Type> validation(numberOfLengthGroups);
+  validation.setZero();
   int counter=0;
   for(int y=0;y<nStationsEachYear.size();y++){
     SparseMatrix<Type> As = A_ListS(y);
@@ -289,6 +293,8 @@ Type objective_function<Type>::operator() ()
 	            }
 	          }
 	        }
+        }else{
+          validation(l) = validation(l) + mu(counter,l);
         }
     	}
       counter++;
@@ -307,7 +313,9 @@ Type objective_function<Type>::operator() ()
     REPORT(fishObsMatrix);
   }
 
-
+  if(doValidation==1){
+    ADREPORT(validation);
+  }
 
   //Calculate indecies and COG
   int nYears = nStationsEachYear.size();
@@ -390,10 +398,12 @@ Type objective_function<Type>::operator() ()
     }
   }
 
-  ADREPORT(muReportFullExp); //Indices which are bias corrected
-  ADREPORT(muReportSelectedExp); //Indices which are bias corrected
+
 
   if(doDetailedRep==1){
+    ADREPORT(muReportFullExp); //Indices which are bias corrected
+    ADREPORT(muReportSelectedExp); //Indices which are bias corrected
+
     //ADREPORT(muReport); //Report all stratas, remove for computational reasons
     ADREPORT(muReportFull);
     ADREPORT(muReportSelected);
@@ -402,6 +412,8 @@ Type objective_function<Type>::operator() ()
     ADREPORT(COGy);
 
   }else if(doDetailedRep==2){
+    ADREPORT(muReportFullExp); //Indices which are bias corrected
+    ADREPORT(muReportSelectedExp); //Indices which are bias corrected
 
     //ADREPORT(muReport); //Report all stratas, remove for computational reasons
     ADREPORT(muReportFull);

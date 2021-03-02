@@ -274,3 +274,20 @@ plotResults(runLD,what = "depth")
 
 
 
+#Run without storing sdrep, memory issues in validation when applying several cores.
+runVal = fitModel(data = dat,par = par,conf = conf,map = map, doDetailedRep = 0)
+
+start_time <- Sys.time()
+val = validateModel(runVal,nCores=8)
+end_time <- Sys.time()
+timeUsed = end_time - start_time
+timeUsed
+
+
+plot(log(val$obsMatrix),log(val$predmatrix),
+     main = "Predictions vs observations",xlab = "Observation",ylab = "Prediction",
+     cex.lab = 1.5, cex.main = 1.7,cex.axis = 1.4,
+     ylim = c(-4.5,4.5))
+abline(0,1,lw = 3)
+mean(abs(log(valSmall$predmatrix)-log(valSmall$obsMatrix)))
+mean((log(valSmall$predmatrix)-log(valSmall$obsMatrix))^2)

@@ -4,7 +4,7 @@
 \alias{runwithout}
 \title{runwithout Fit stim and leave out observation indices as provided in fold}
 \usage{
-runwithout(data, par, conf, map, fold)
+runwithout(data, par, conf, map, fold, doDetailedRep = 0, doValidation = 1)
 }
 \arguments{
 \item{data}{Data}
