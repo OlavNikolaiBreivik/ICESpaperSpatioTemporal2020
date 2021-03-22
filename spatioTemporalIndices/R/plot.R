@@ -15,7 +15,7 @@ plotResults <- function(run,what=NULL,range = c(-10,6), legend = TRUE){
     depth=seq(from=min(attributes(run$data)$depth),to=max(attributes(run$data)$depth),length.out = length(depthSpline))
 
     plot(depth, depthSpline, lty=1,type = 'l',ylim = c(min(depthSpline - 1.96*sdDepthSpline)-0.2,max(depthSpline + 1.96*sdDepthSpline)+0.2),
-         ylab = "Effect",main = "Depth effect",col="red",xlab = "Depth (m)",
+         ylab = "Effect in linear predictor",main = "Depth effect",col="red",xlab = "Depth (m)",
          cex.main = 1.7,cex.lab = 1.5, cex = 1.5)
     lines(depth, depthSpline - 1.96*sdDepthSpline, lty=2,col="red")
     lines(depth, depthSpline + 1.96*sdDepthSpline, lty=2,col="red")
@@ -44,8 +44,13 @@ plotResults <- function(run,what=NULL,range = c(-10,6), legend = TRUE){
     indexStart2 = mesh$n *l+1
     indexEnd2=indexStart2+mesh$n-1
 
+    kappa = exp(run$pl$log_kappa)[1]
+    scalingConstant = exp(run$rep$par.fixed[which(names(run$rep$par.fixed)=="log_sigma")])[1]
+    scalingConstant2 = sqrt(1/((4*3.14159265)*kappa*kappa))
+    scale = scalingConstant/scalingConstant2
+
     lD = which(run$conf$lengthGroups == as.numeric(what[3]))
-    spatialE = (run$data$weigthLength[lD]*randomEffects[indexStart:indexEnd] + (1-run$data$weigthLength[lD])*randomEffects[indexStart2:indexEnd2] )/exp(run$rep$par.fixed[which(names(run$rep$par.fixed)=="log_tau")])[1]
+    spatialE = (run$data$weigthLength[lD]*randomEffects[indexStart:indexEnd] + (1-run$data$weigthLength[lD])*randomEffects[indexStart2:indexEnd2] )*scale
 
     year = as.numeric(what[2])
     yearPosition = year-min(run$conf$years)+1
@@ -100,8 +105,13 @@ plotResults <- function(run,what=NULL,range = c(-10,6), legend = TRUE){
     indexStart2=length(run$conf$years)*mesh$n *(l)+(yearPosition-1)*mesh$n+1
     indexEnd2=indexStart2+mesh$n-1
 
+    kappa = exp(run$pl$log_kappa)[2]
+    scalingConstant = exp(run$rep$par.fixed[which(names(run$rep$par.fixed)=="log_sigma")])[2]
+    scalingConstant2 = sqrt(1/((4*3.14159265)*kappa*kappa))
+    scale = scalingConstant/scalingConstant2
+
     lD = which(run$conf$lengthGroups == as.numeric(what[3]))
-    ST = (run$data$weigthLength[lD]*randomEffects[indexStart:indexEnd] + (1-run$data$weigthLength[lD])*randomEffects[indexStart2:indexEnd2] )*exp(2*run$rep$par.fixed[which(names(run$rep$par.fixed)=="log_sigma")])[2]
+    ST = (run$data$weigthLength[lD]*randomEffects[indexStart:indexEnd] + (1-run$data$weigthLength[lD])*randomEffects[indexStart2:indexEnd2] )*scale
 
     beta0 = summary(run$rep)[which(rownames(summary(run$rep))=="beta0")]
     ll = which(run$conf$lengthGroups==as.numeric(what[3]))
@@ -159,8 +169,14 @@ plotResults <- function(run,what=NULL,range = c(-10,6), legend = TRUE){
       indexStart2=length(run$conf$years)*mesh$n *(l)+(yearPosition-1)*mesh$n+1
       indexEnd2=indexStart2+mesh$n-1
 
+
+      kappa = exp(run$pl$log_kappa)[2]
+      scalingConstant = exp(run$rep$par.fixed[which(names(run$rep$par.fixed)=="log_sigma")])[2]
+      scalingConstant2 = sqrt(1/((4*3.14159265)*kappa*kappa))
+      scale = scalingConstant/scalingConstant2
+
       lD = which(run$conf$lengthGroups == as.numeric(what[3]))
-      ST = (run$data$weigthLength[lD]*randomEffects[indexStart:indexEnd] + (1-run$data$weigthLength[lD])*randomEffects[indexStart2:indexEnd2] )/exp(run$rep$par.fixed[which(names(run$rep$par.fixed)=="log_tau")])[2]
+      ST = (run$data$weigthLength[lD]*randomEffects[indexStart:indexEnd] + (1-run$data$weigthLength[lD])*randomEffects[indexStart2:indexEnd2] )*scale
 
 
       meshS = attributes(run$data)$meshS
@@ -170,14 +186,18 @@ plotResults <- function(run,what=NULL,range = c(-10,6), legend = TRUE){
       indexStartS2=meshS$n *(l)+1
       indexEndS2=indexStartS2+meshS$n-1
 
+      kappa = exp(run$pl$log_kappa)[1]
+      scalingConstant = exp(run$rep$par.fixed[which(names(run$rep$par.fixed)=="log_sigma")])[1]
+      scalingConstant2 = sqrt(1/((4*3.14159265)*kappa*kappa))
+      scale = scalingConstant/scalingConstant2
 
       if(run$conf$cutoff[3] != 0){
       A = inla.spde.make.A(meshS, loc =  mesh$loc[,1:2])
-      addS1 = A%*%randomEffectsS[indexStartS:indexEndS]/exp(run$rep$par.fixed[which(names(run$rep$par.fixed)=="log_tau")])[1]
-      addS2 = A%*%randomEffectsS[indexStartS2:indexEndS2]/exp(run$rep$par.fixed[which(names(run$rep$par.fixed)=="log_tau")])[1]
-      S = run$data$weigthLength[lD]*addS1[,1] + (1-run$data$weigthLength[lD])*addS2[,1]
+      addS1 = A%*%randomEffectsS[indexStartS:indexEndS]
+      addS2 = A%*%randomEffectsS[indexStartS2:indexEndS2]
+      S = (run$data$weigthLength[lD]*addS1[,1] + (1-run$data$weigthLength[lD])*addS2[,1])*scale
       }else{
-        S = (run$data$weigthLength[lD]*randomEffects[indexStartS:indexEndS] + (1-run$data$weigthLength[lD])*randomEffectsS[indexStartS2:indexEndS2] )/exp(run$rep$par.fixed[which(names(run$rep$par.fixed)=="log_tau")])[1]
+        S = (run$data$weigthLength[lD]*randomEffects[indexStartS:indexEndS] + (1-run$data$weigthLength[lD])*randomEffectsS[indexStartS2:indexEndS2] )*scale
       }
       beta0 = summary(run$rep)[which(rownames(summary(run$rep))=="beta0")]*0
       ll = which(run$conf$lengthGroups==as.numeric(what[3]))
@@ -238,7 +258,7 @@ plotSunAlt<-function(run){
 
   plot(sunAltEffectLower,
        ylim=c(min(sunAltEffectLowerL,sunAltEffectUpperL),max(sunAltEffectLowerU,sunAltEffectUpperU)),
-       main="Sun altitude effect",type="l",col="red",xaxt="n",xlab = "Sun altitude", ylab  = "Effect",
+       main="Sun altitude effect",type="l",col="red",xaxt="n",xlab = "Sun altitude", ylab  = "Effect in linear predictor",
        cex.main = 1.7,cex.lab = 1.5, cex = 1.5)
   abline(a=0,b=0)
   lines(sunAltEffectLowerL,main="Lower",col="red",lty = 2)

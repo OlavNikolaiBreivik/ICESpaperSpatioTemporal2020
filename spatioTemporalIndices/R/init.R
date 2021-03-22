@@ -28,7 +28,7 @@ setPar <- function(data,conf){
                      betaSun =rep(0,max(1,conf$sunAlt[1])*4),
                      betaDepth = rep(0,data$Sdim*2),
                      log_lambda =c(5,5),
-                     log_sigma =c(-2,-1,0),
+                     log_sigma =c(0,0,0),
                      log_kappa =c(-5,-5),
                      logSize =0.2,
                      tan_rho_t =1,

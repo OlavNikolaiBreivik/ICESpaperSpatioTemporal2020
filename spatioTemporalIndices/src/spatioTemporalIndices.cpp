@@ -140,6 +140,9 @@ Type objective_function<Type>::operator() ()
         SEPARABLE(AR1(rho_l(0)),GMRF(Q_s)).simulate(xS);
       }
     }
+
+    Type scaleS = Type(1)/((4*3.14159265)*kappa[0]*kappa[0]); //No effect on results, but needed for interpreting the sigma^2 parameter as marginal variance. See section 2.1 in Lindgren (2011)
+    xS = xS/sqrt(scaleS);
   }
   if(spatioTemporal==1){
     if(usePCpriors==1){
@@ -152,6 +155,8 @@ Type objective_function<Type>::operator() ()
         SEPARABLE(AR1(rho_l(1)),SEPARABLE(AR1(rho_t(0)),GMRF(Q_st))).simulate(xST);
       }
     }
+    Type scaleST = Type(1)/((4*3.14159265)*kappa[1]*kappa[1]); //No effect on results, but needed for interpreting the sigma^2 parameter as marginal variance
+    xST = xST/sqrt(scaleST);
   }
 
   if(useNugget==1){
@@ -172,7 +177,6 @@ Type objective_function<Type>::operator() ()
     for(int i = 0; i< xInt.size(); ++i){
       Q_nuggetIIDI.coeffRef(i,i)=1;
     }
-
     nll += SEPARABLE(GMRF(Q_nuggetIIDI),AR1(rho_l(2)))(nuggetIndex);
 
   }
@@ -249,21 +253,21 @@ Type objective_function<Type>::operator() ()
 	         covariatesConvexW = (numberOfLengthGroups-l-1)/(numberOfLengthGroups-1);
            mu(counter,l)= exp( beta0.row(y)(l)+
              covariatesConvexW*timeInDayLow(counter) + (1-covariatesConvexW)*timeInDayHigh(counter) +
-             deltaMatrixS.row(l)(s)*sigma(0)*sigma(0)+
-             deltaMatrixST.row(l)(s)*sigma(1)*sigma(1)+
+             deltaMatrixS.row(l)(s)*sigma(0)+
+             deltaMatrixST.row(l)(s)*sigma(1)+
              betahaul(l)*log(dist(counter))+
              covariatesConvexW*depthEffect1(counter) + (1-covariatesConvexW)*depthEffect2(counter)+
-             nugget.col(counter)(l)*sigma(2)*sigma(2));
+             nugget.col(counter)(l)*sigma(2));
         log_var_minus_mu=log(mu(counter,l)*mu(counter,l)*size);
         if(predMatrix(counter,l)==0){
 	        if(zeroInflated ==1){
 	          muZero = exp(delta_z(0) +
 	            delta_z(1)* beta0.row(y)(l) +
 	            delta_z(2)* (covariatesConvexW*timeInDayLow(counter) + (1-covariatesConvexW)*timeInDayHigh(counter)) +
-	            delta_z(3)* deltaMatrixS.row(l)(s)*sigma(0)*sigma(0)+
-	            delta_z(4)* deltaMatrixST.row(l)(s)*sigma(1)*sigma(1)+
+	            delta_z(3)* deltaMatrixS.row(l)(s)*sigma(0)+
+	            delta_z(4)* deltaMatrixST.row(l)(s)*sigma(1)+
 	            delta_z(5)* (covariatesConvexW*depthEffect1(counter) + (1-covariatesConvexW)*depthEffect2(counter))+
-	            delta_z(7)* nugget.col(counter)(l)*sigma(2)*sigma(2)+
+	            delta_z(7)* nugget.col(counter)(l)*sigma(2)+
 	            delta_z(8)* betahaul(l)*log(dist(counter)));
 	          pZero = dpois(Type(0), muZero,true);
 	          if(obsModel==1){
@@ -360,9 +364,9 @@ Type objective_function<Type>::operator() ()
             muThis =  exp(beta0.row(y)(l) +
               covariatesConvexW*timeInDayEffectIntLow(0) + (1-covariatesConvexW)*timeInDayEffectIntHigh(0)+
               covariatesConvexW*depthEffectInt1(CppAD::Integer(predObsInStrata(i))) + (1-covariatesConvexW)*depthEffectInt2(CppAD::Integer(predObsInStrata(i)))+
-              deltaPredS(CppAD::Integer(predObsInStrata(i)))*sigma(0)*sigma(0)+
-              deltaPredST(CppAD::Integer(predObsInStrata(i)))*sigma(1)*sigma(1)+
-              nuggetIndex.col(CppAD::Integer(predObsInStrata(i)))(l)*sigma(2)*sigma(2) //Should replace with 0.5sigma^2
+              deltaPredS(CppAD::Integer(predObsInStrata(i)))*sigma(0)+
+              deltaPredST(CppAD::Integer(predObsInStrata(i)))*sigma(1)+
+              nuggetIndex.col(CppAD::Integer(predObsInStrata(i)))(l)*sigma(2) //Should replace with 0.5sigma^2
               );
 
             muReport(y,strata-1,l)  =muReport(y,strata-1,l) +muThis;
